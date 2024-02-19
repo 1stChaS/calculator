@@ -4,7 +4,6 @@ import tkinter as tk
 from tkinter import ttk
 from math import exp, log, log10, log2, sqrt, factorial
 
-
 class CalculatorUI(tk.Tk):
     """User Interface for a keypad."""
     def __init__(self):
@@ -20,7 +19,7 @@ class CalculatorUI(tk.Tk):
         history_frame = tk.Frame(self)
         history_frame.pack(side=tk.TOP, fill=tk.X, expand=False)
         self.history_text = tk.Text(history_frame, height=5, state='disabled',
-                                    font=('Verdana', 14), padx=15, pady=15)
+                                    font=('Verdana', 12), padx=14, pady=14)
         self.history_text.pack(side=tk.TOP, fill=tk.X, expand=False)
 
         self.display = tk.Text(self, height=2, state='disabled',
@@ -39,16 +38,12 @@ class CalculatorUI(tk.Tk):
         if value == '=':
             try:
                 expression = self.display.get('1.0', 'end-1c')
-
-                # expression = expression.replace('factorial', 'math.factorial(')
-                expression = expression.replace("log", "log10")
-                expression = expression.replace("mod", "%")
-                expression = expression.replace("^", "**")
-                result = eval(expression)
+                # Replace factorial with custom_factorial
+                expression = expression.replace('factorial', 'self.custom_factorial')
+                result = eval(expression.replace("^", "**"))
                 # Add the expression and result to history
                 history_entry = f"{expression} = {result}\n"
                 self.history.append((expression, result))
-
                 # Update the history text
                 self.history_text.configure(state='normal')
                 self.history_text.insert(tk.END, history_entry)
@@ -61,21 +56,26 @@ class CalculatorUI(tk.Tk):
                 self.display.configure(state='disabled')
             except Exception as e:
                 print("Error", e)
-
-        # DEL
         elif value == 'DEL':
             self.display.configure(state='normal')
             current_text = self.display.get('1.0', 'end-1c')
-            # Remove the last character
-            new_text = current_text[:-1]
+            new_text = current_text[:-1]  # Remove the last character
             self.display.delete('1.0', tk.END)
             self.display.insert(tk.END, new_text, "right")
             self.display.configure(state='disabled')
-        # CLR
         elif value == 'CLR':
             self.display.configure(state='normal')
             self.display.delete('1.0', tk.END)
             self.display.configure(state='disabled')
+        elif value in ['exp', 'sqrt', 'log', 'log10', 'log2', 'factorial']:
+            # Handle common mathematical functions
+            current_text = self.display.get('1.0', 'end-1c').strip()
+            if current_text:
+                # If there's content in the display, apply the function
+                self.display.configure(state='normal')
+                self.display.delete('1.0', tk.END)
+                self.display.insert(tk.END, f"{value}({current_text})", "right")
+                self.display.configure(state='disabled')
         else:
             self.display.configure(state='normal')
             self.display.insert(tk.END, value, "right")
@@ -93,7 +93,7 @@ class CalculatorUI(tk.Tk):
             frame.grid_rowconfigure(i, weight=1)
 
         # Create a Combobox for additional functions
-        functions = ['exp', 'ln', 'log', 'log2', 'sqrt', 'mod', '(', ')']
+        functions = ['exp', 'sqrt', 'log', 'log10', 'log2', 'factorial', '%', '(', ')']
         combo = ttk.Combobox(frame, values=functions, state="readonly")
         combo.set("exp")  # Set the default function
         combo.grid(row=len(basic_operators), column=0, padx=2, pady=2, sticky="nsew")
@@ -110,7 +110,6 @@ class CalculatorUI(tk.Tk):
         frame.grid_columnconfigure(1, weight=1)
 
         return frame
-
 
     def make_keypad(self) -> tk.Frame:
         """Create the numeric keypad."""
